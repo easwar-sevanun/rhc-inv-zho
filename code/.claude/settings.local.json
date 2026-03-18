@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk 'NR>=4500 && NR<=4600' '/Users/easwar/Documents/Inventory Management/code/Device_Inventory_Management.ds')",
+      "Bash(awk 'NR>=6800 && NR<=6900' '/Users/easwar/Documents/Inventory Management/code/Device_Inventory_Management.ds')",
+      "Bash(awk 'NR>=8680 && NR<=8750' '/Users/easwar/Documents/Inventory Management/code/Device_Inventory_Management.ds')"
+    ]
+  }
+}
