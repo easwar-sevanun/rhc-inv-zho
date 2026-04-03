@@ -1,6 +1,6 @@
 /*
  * Author       : sevanun
- * Generated on : 03-Apr-2026 12:18:46
+ * Generated on : 03-Apr-2026 17:53:53
  * Version      : 1.0
  */
  application "Device Inventory Management"
@@ -3321,7 +3321,7 @@
 		list All_Kit_Delivery_Report
 		{
 			displayName = "All_Kit_Delivery_Report"
-			show all rows from kit_issues    
+			show all rows from kit_issues  [distribution_status != "CLOSED"]  
 			(
 				provision_id as "Provision ID"
 				kit as "Kit"
@@ -3733,7 +3733,7 @@
                  	result.put("code",500);
                  	result.put("device_record_id",0);
                  	result.put("message","Unknown error");
-                 	getUrl = "/api/remotecarepatientdevices?query=patient_id%3D" + patient_ref_id + "&status=active";
+                 	getUrl = "/api/remotecarepatientdevices?query=status%3Dactive%26patient_id%3D" + patient_ref_id;
                  	getMap = thisapp.fn_invokeapi(getUrl,"GET",null);
                  	getStatus = 0;
                  	deviceRecordId = 0;
@@ -3742,19 +3742,28 @@
                  		getStatus = getMap.get("responseCode");
                  		if(getStatus == 200 || getStatus == 201)
                  		{
-                 			getResponse = getMap.get("responseText").toMap();
-                 			getData = getResponse.get("data");
-                 			if(getData != null && getData.size() > 0)
+                 			if(getMap.get("responseText") != null && getMap.get("responseText").trim() != "")
                  			{
-                 				firstRow = getData.get(0).toMap();
-                 				deviceRecordId = firstRow.get("device_id");
-                 				if(deviceRecordId != null)
+                 				getResponse = getMap.get("responseText").toMap();
+                 				getData = getResponse.get("data");
+                 				if(getData != null && getData.size() > 0)
                  				{
-                 					result.put("code",getStatus);
-                 					result.put("device_record_id",deviceRecordId);
-                 					result.put("message","Success");
-                 					result.put("data",getData);
-                 					return result;
+                 					firstRow = getData.get(0).toMap();
+                 					deviceRecordId = firstRow.get("device_id");
+                 					if(deviceRecordId != null)
+                 					{
+                 						result.put("code",getStatus);
+                 						result.put("device_record_id",deviceRecordId);
+                 						result.put("message","Success");
+                 						result.put("data",getData);
+                 						return result;
+                 					}
+                 					else
+                 					{
+                 						result.put("code",getStatus);
+                 						result.put("device_record_id",deviceRecordId);
+                 						result.put("message",getMap.get("responseText").toMap().get("detail"));
+                 					}
                  				}
                  				else
                  				{
@@ -3767,7 +3776,7 @@
                  			{
                  				result.put("code",getStatus);
                  				result.put("device_record_id",deviceRecordId);
-                 				result.put("message",getMap.get("responseText").toMap().get("detail"));
+                 				result.put("message","No matching record found");
                  			}
                  		}
                  		else
@@ -4328,10 +4337,6 @@
                  						kd.device_ref_id1=deviceRecordId;
                  						return "Success";
                  					}
-                 					else
-                 					{
-                 						return thisapp.errMsg(devfin.get("responseText").toMap().get("detail"));
-                 					}
                  				}
                  				else
                  				{
@@ -4610,6 +4615,8 @@
                  }
 			 }
 		 }
+
+
 		workflow
 		{
 		form
@@ -8213,6 +8220,7 @@
 															hide Patient_Results.Address;
 															disable Patient_Results.pr_patient_id;
 															hide Patient_Results.pr_patient_id;
+															disable Patient_Results.patient_ref_id1;
 														}
 													}
 													else
@@ -9854,48 +9862,7 @@
 							{
 								custom deluge script
 								(
-															/*input.notes = "";
-														 						 						//to be deleted
-														 						 						if(input.offboarding_date1 != null)
-														 						 						{
-														 						 							reasonText = ifnull(input.return_reason1,"").trim();
-														 						 							reasonKey = reasonText.toLowerCase();
-														 						 							reasonId = 0;
-														 						 							if(reasonKey == "recovered")
-														 						 							{
-														 						 								reasonId = 1;
-														 						 							}
-														 						 							else if(reasonKey == "deceased")
-														 						 							{
-														 						 								reasonId = 2;
-														 						 							}
-														 						 							else if(reasonKey == "opted-out" || reasonKey == "opted out" || reasonKey == "optedout")
-														 						 							{
-														 						 								reasonId = 3;
-														 						 							}
-														 						 							else if(reasonKey == "faulty")
-														 						 							{
-														 						 								reasonId = 4;
-														 						 							}
-														 						 							else if(reasonKey == "unused")
-														 						 							{
-														 						 								reasonId = 5;
-														 						 							}
-														 						 							ret = thisapp.fn_kit_offboard(input.ID,reasonId);
-														 						 							//ret = "Success";//TO BE DELETED
-														 						 							if(ret != "Success")
-														 						 							{
-														 						 								input.notes = ret;
-														 						 								input.offboarding_date1 = null;
-														 						 								input.return_reason1 = null;
-														 						 								kitstage = if(input.Blueprint.Current_Stage == "Kit In Use","Kit In Use","Kit Returned Early");
-														 						 								thisapp.blueprint.changeStage("kit_issues","kit_issue_and_return_process",kitstage,input.ID);
-														 						 							}
-														 						 						}
-														 						 						//kd = kit_issues[ID == input.ID];
-														 						 						input.notes = if(ret == "Success",thisapp.errMsg(ret),ret);
-														 						 						*/
-														if(input.offboarding_date1 == null || input.offboarding_date1.toString() == "" || input.return_reason1 == null || input.return_reason1 == "")
+															if(input.offboarding_date1 == null || input.offboarding_date1.toString() == "" || input.return_reason1 == null || input.return_reason1 == "")
 														{
 															input.notes = thisapp.errMsg("Offbaording date / reason missing");
 															if(input.Blueprint.Current_Stage == "Kit In Use")
@@ -10175,15 +10142,6 @@
          				}
          				after
          				{
-							actions 
-							{
-								custom deluge script
-								(
-															kd = kit_issues[ID = input.ID];
-														kd.distribution_status="LOST";
-														input.distribution_status = "LOST";
-								)
-							}
          				}
          				chart data
          				{
